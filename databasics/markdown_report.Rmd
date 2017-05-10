@@ -1,0 +1,130 @@
+---
+title: "R Basics - A simple data analysis project"
+author: "Kristen Sosulski"
+date: "May 10, 2017"
+output: html_document
+---
+Updated on `r date()`.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo = FALSE, include=FALSE}
+#required libraries
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+library(ggvis)
+library(reshape2)
+library(knitr)
+library(shiny)
+#working directory
+setwd("~/Desktop/BECOMING_VISUAL/becoming visual")
+```
+
+This section will guide you in the process of decoding your data into information and ultimately intelligible insights. In doing so, we will explore the use of tidyverse and R base packages.
+
+## When working with a new data what initial questions do you have?
+
+Consider the following questions to guide your understanding.
+
+* What does your data represent in the real world? 
+* How is this real world phenomena characterized by the data that you have? 
+* From what time period is the data? 
+
+Once you have this basic understanding of your data you can dig deeper. Then you can use visualization techniques to explore your data and derive some basic understandings of the phenomena you are studying, such as the largest and smallest values for each variable. In addition, calculating summary statistics translate data into information by revealing the shape of the data, the mean, median, minimum value, maximum value, and variability all with simple visualizations.
+
+For any data science project there are few simple steps to follow.
+![Caption for the picture.](datasciencesteps.png)
+
+## Exercise A) Importing your data
+
+Using the World internet usage data we will compare of read.csv to read_csv for importing data.
+
+
+#### utils package using read.csv()
+```{r}
+internet_utils <- read.csv("world_internet_usage.csv")
+head(internet_utils)
+```
+
+#### readr read_csv using read_csv()
+```{r}
+library(readr)
+internet_readr <- read_csv("world_internet_usage.csv")
+head(internet_readr)
+```
+
+### Accessing specific rows and columns
+
+```{r}
+#extract by position
+internet_readr[[2,1]]
+internet_utils [2,1] # double [[ ]] works too
+
+#extract by name
+internet_readr$country
+internet_utils$country
+
+#to use with infix function add a .
+internet_readr %>% .$country 
+```
+
+##Exercise B) Tidy data - reshaping
+
+You need to rename columns first to remove the X in front of each year.
+
+```{r}
+names(internet_utils) <-c("country", "2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012")
+names(internet_utils)
+```
+
+Reshape a data frame
+```{r}
+library(reshape2)
+internet_utils_reshaped <- melt(internet_utils,id.vars="country", variable.name="year", value.name="usage")
+```
+Reshape a tibble
+```{r}
+internet_readr_reshaped <- melt(internet_readr,id.vars="country", variable.name="year", value.name="usage")
+internet_readr_reshaped
+class(internet_readr_reshaped) # turns into a data.frame!
+```
+
+Use the gather function to reshape
+```{r}
+tidy_internet_readr <- 
+internet_readr %>%
+gather(`2000`,`2001`,`2002`,`2003`,`2004`,`2005`,`2006`,`2007`,`2008`,`2009`,`2010`,`2011`,`2012`, key="year", value="usage")
+
+tidy_internet_readr
+```
+
+##Exercise C) Understand - Visualize
+
+```{r}
+#single boxplot
+boxplot(internet_readr$`2000`)
+
+#multiple box plots
+boxplot(internet_readr[,2:14])
+
+#simple plot
+plot(tidy_internet_readr$year,tidy_internet_readr$usage,main="Internet Usage per 100 people",xlab="Year", ylab="Usage")
+```
+
+##Exercise D) Communicate
+Create charts and reports.
+
+###Create presentation ready charts and graphs using ggplot and ggthemes.
+
+```{r, fig.height=12, fig.width=12}
+#scatter plot
+library(ggthemes)
+library(ggplot2)
+ggplot(tidy_internet_readr,aes(x=year,y=usage,colour=country,group=country)) + geom_line() + labs(title = "Internet Usage per 100 people", subtitle = "Since 2011, the UAE has surpassed Singapore and the US in internet users", caption = "Source: World Bank, 2013",x = "Year",y ="Usage") + theme_few()
+```
+
+###Create a markdown document
+
+Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
